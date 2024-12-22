@@ -103,34 +103,174 @@ res_ordered <- res[order(res$padj),]
 # Get variance stabilized transformation
 vst <- varianceStabilizingTransformation(dds)
 
+
+# Previous code remains the same up to the VST transformation
+
+# First install the Cairo package if needed
+install.packages("Cairo")
+
+# Make sure we have the required libraries
+library(ggplot2)
+library(gridExtra)
+library(dplyr)
+library(Cairo)
+
+# Convert DESeq2 results to a data frame and add gene names
+res_df <- as.data.frame(res_ordered)
+res_df$gene <- rownames(res_df)  # This was missing in the previous code
+
+# Create Top 10 DE genes plot
+top_10_plot <- res_df %>%
+  arrange(padj) %>%
+  head(10) %>%
+  ggplot(aes(x = reorder(gene, log2FoldChange), y = log2FoldChange, fill = log2FoldChange > 0)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = c("#ff7f7f", "#82ca9d")) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "none"
+  ) +
+  labs(
+    title = "Top 10 Differentially Expressed Genes",
+    x = "Gene",
+    y = "Log2 Fold Change"
+  )
+
+# Create Volcano plot
+volcano_plot <- res_df %>%
+  mutate(
+    significant = padj < 0.05 & abs(log2FoldChange) > 1,
+    label = gene  # Modified this line
+  ) %>%
+  ggplot(aes(x = log2FoldChange, y = -log10(padj), color = significant)) +
+  geom_point(alpha = 0.6) +
+  scale_color_manual(values = c("grey", "red")) +
+  theme_minimal() +
+  labs(
+    title = "Volcano Plot of Differential Expression",
+    x = "Log2 Fold Change",
+    y = "-log10(adjusted p-value)"
+  )
+
+# Save as a single PDF with both plots
+pdf("differential_expression_analysis.pdf", width = 12, height = 8)
+# Plot Top 10 DE genes on first page
+print(top_10_plot)
+# Plot Volcano plot on new page
+print(volcano_plot)
+# Close PDF device
+dev.off()
+
+# Save as separate PDFs
+pdf("top_10_de_genes.pdf", width = 8, height = 6)
+print(top_10_plot)
+dev.off()
+
+pdf("volcano_plot.pdf", width = 8, height = 6)
+print(volcano_plot)
+dev.off()
+
+# If you want both plots on the same page
+pdf("combined_plots.pdf", width = 12, height = 6)
+grid.arrange(top_10_plot, volcano_plot, ncol = 2)
+dev.off()
+
+
+
 ###########################################
 # 5. Visualization
 ###########################################
 
-# PCA Plot
+# [Previous sections remain the same until Visualization section]
+
+###########################################
+# 5. Visualization
+###########################################
+
+# 1. PCA Plot
 pca_data <- plotPCA(vst, intgroup="ERBB2_Status", returnData=TRUE)
 percentVar <- round(100 * attr(pca_data, "percentVar"))
 
-ggplot(pca_data, aes(PC1, PC2, color=ERBB2_Status)) +
+# Create enhanced PCA plot
+pca_plot <- ggplot(pca_data, aes(PC1, PC2, color=ERBB2_Status)) +
   geom_point(size=3) +
-  geom_density2d() +
+  geom_density2d(alpha=0.3) +
   xlab(paste0("PC1: ", percentVar[1], "% variance")) +
   ylab(paste0("PC2: ", percentVar[2], "% variance")) +
+  ggtitle("PCA of Gene Expression by ERBB2 Status") +
   theme_minimal() +
-  scale_color_manual(values=c("blue", "red")) +
-  ggtitle("PCA of Gene Expression by ERBB2 Status")
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
+    axis.title = element_text(size = 12),
+    axis.text = element_text(size = 10),
+    legend.title = element_text(size = 12),
+    legend.text = element_text(size = 10)
+  ) +
+  scale_color_manual(values=c("Amplified"="#E41A1C", "Not_Amplified"="#377EB8"))
 
-# Heatmap of top DE genes
+# Save PCA plot as PDF
+pdf("PCA_plot.pdf", width=10, height=8)
+print(pca_plot)
+dev.off()
+
+# 2. Heatmap
+# Get significant genes
 significant_genes <- which(res$padj < 0.05 & abs(res$log2FoldChange) > 1)
-mat <- assay(vst)[significant_genes[1:50], ]
-metadata_factors <- data.frame(ERBB2_Status=colData(vst)$ERBB2_Status)
 
-pheatmap(mat,
-         annotation_col=metadata_factors,
-         scale="row",
-         show_rownames=TRUE,
-         cluster_cols=TRUE,
-         fontsize_row=8)
+# If there are too many significant genes, take top 50 by adjusted p-value
+if (length(significant_genes) > 50) {
+  significant_genes <- significant_genes[1:50]
+}
+
+# Extract normalized counts for significant genes
+mat <- assay(vst)[significant_genes, ]
+
+# Create annotation for samples
+annotation_col <- data.frame(
+  ERBB2_Status = colData(vst)$ERBB2_Status,
+  row.names = colnames(mat)
+)
+
+# Calculate z-scores for better visualization
+mat_scaled <- t(scale(t(mat)))
+
+# Create color palettes
+heatmap_colors <- colorRampPalette(c("navy", "white", "red"))(100)
+annotation_colors <- list(
+  ERBB2_Status = c(Amplified = "#E41A1C", Not_Amplified = "#377EB8")
+)
+
+# Save heatmap as PDF
+pdf("heatmap.pdf", width=12, height=10)
+pheatmap(
+  mat_scaled,
+  annotation_col = annotation_col,
+  annotation_colors = annotation_colors,
+  color = heatmap_colors,
+  show_rownames = TRUE,
+  show_colnames = FALSE,
+  clustering_distance_rows = "correlation",
+  clustering_distance_cols = "correlation",
+  clustering_method = "complete",
+  scale = "none",  # already scaled above
+  fontsize_row = 8,
+  fontsize_col = 8,
+  main = "Gene Expression Heatmap of Significant Genes",
+  annotation_names_col = TRUE,
+  annotation_legend = TRUE
+)
+dev.off()
+
+# Print visualization summary
+cat("\nVisualization Summary:\n")
+cat("Number of significant genes:", length(significant_genes), "\n")
+cat("PC1 variance explained:", percentVar[1], "%\n")
+cat("PC2 variance explained:", percentVar[2], "%\n")
+cat("\nVisualization files saved:\n")
+cat("- PCA_plot.pdf\n")
+cat("- heatmap.pdf\n")
+
 
 ###########################################
 # 6. Pathway Analysis
@@ -161,6 +301,9 @@ go_enrich <- gseGO(geneList = gene_list,
                    maxGSSize = 500,
                    pvalueCutoff = 0.05,
                    verbose = TRUE)
+
+
+
 
 ###########################################
 # 7. Survival Analysis
