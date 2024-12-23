@@ -574,3 +574,143 @@ dev.off()
 # Also display the plot in the current device
 print(surv_plot)
 
+
+
+
+# Load required libraries
+library(glmnet)
+library(survival)
+library(survminer)
+library(ggplot2)
+
+# Prepare data for LASSO Cox regression
+# Using the existing vst_matrix_aligned and clinical_aligned from your code
+
+# Create design matrix X (predictors)
+X <- t(vst_matrix_aligned)
+var_predictors <- apply(X, 2, var) > 0
+X <- X[, var_predictors]
+gene_names <- colnames(X)  # Store gene names for later use
+
+# Create survival object y (outcome)
+y <- Surv(
+  time = clinical_aligned$Overall.Survival..Months.,
+  event = ifelse(clinical_aligned$Overall.Survival.Status == "DECEASED", 1, 0)
+)
+
+# Perform LASSO-regularized Cox regression with cross-validation
+set.seed(123)  # For reproducibility
+fit_cv <- cv.glmnet(X, y, 
+                    family = "cox",
+                    alpha = 1,       # 1 for LASSO
+                    nfolds = 10)
+
+# Get optimal lambda values
+lambda_min <- fit_cv$lambda.min
+lambda_1se <- fit_cv$lambda.1se
+
+# Fit final model with optimal lambda (using lambda.min for more liberal feature selection)
+final_model <- glmnet(X, y, 
+                      family = "cox",
+                      alpha = 1,
+                      lambda = lambda_min)
+
+# Extract non-zero coefficients (selected features)
+coef_matrix <- coef(final_model)
+selected_genes <- gene_names[which(coef_matrix != 0)]
+selected_coef <- coef_matrix[which(coef_matrix != 0)]
+
+# Calculate risk scores
+risk_scores <- as.numeric(X %*% coef_matrix)
+
+# Add risk scores to clinical data
+clinical_aligned$risk_score <- risk_scores
+clinical_aligned$risk_group <- ifelse(risk_scores > median(risk_scores), 
+                                      "High Risk", "Low Risk")
+
+# Create survival curves based on risk groups
+surv_obj <- Surv(time = clinical_aligned$Overall.Survival..Months.,
+                 event = clinical_aligned$Overall.Survival.Status == "DECEASED")
+fit_surv <- survfit(surv_obj ~ risk_group, data = clinical_aligned)
+
+# Calculate median survival times for each group
+median_surv <- summary(fit_surv)$table[, "median"]
+
+# Create enhanced survival plot
+surv_plot <- ggsurvplot(
+  fit = fit_surv,
+  data = clinical_aligned,
+  
+  # Main plot customization
+  pval = TRUE,
+  pval.method = TRUE,
+  conf.int = TRUE,
+  conf.int.alpha = 0.2,
+  
+  # Risk table customization
+  risk.table = TRUE,
+  risk.table.col = "strata",
+  risk.table.height = 0.25,
+  
+  # Labels and title
+  title = "Overall Survival Analysis by LASSO Risk Group",
+  subtitle = paste("Based on", length(selected_genes), "selected genes"),
+  xlab = "Time (Months)",
+  ylab = "Overall Survival Probability",
+  legend.title = "Risk Groups",
+  
+  # Color scheme
+  palette = c("#E7B800", "#2E9FDF"),
+  
+  # Theme customization
+  ggtheme = theme_minimal() +
+    theme(
+      plot.title = element_text(face = "bold", size = 14),
+      plot.subtitle = element_text(face = "italic", size = 12),
+      axis.title = element_text(size = 12),
+      axis.text = element_text(size = 10)
+    )
+)
+
+# Save results
+# 1. Save the survival plot
+pdf("lasso_survival_analysis.pdf", width = 10, height = 12)
+print(surv_plot)
+dev.off()
+
+# 2. Save selected genes and their coefficients
+gene_coef_df <- data.frame(
+  Gene = selected_genes,
+  Coefficient = selected_coef
+)
+write.csv(gene_coef_df, "lasso_selected_genes.csv", row.names = FALSE)
+
+# 3. Create and save coefficient plot
+coef_plot <- ggplot(gene_coef_df, 
+                    aes(x = reorder(Gene, abs(Coefficient)), 
+                        y = Coefficient)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  theme_minimal() +
+  labs(title = "LASSO-selected Genes and Their Coefficients",
+       x = "Genes",
+       y = "Coefficient Value")
+
+pdf("lasso_coefficients.pdf", width = 8, height = length(selected_genes) * 0.3 + 2)
+print(coef_plot)
+dev.off()
+
+# Print summary statistics
+cat("\nLASSO Cox Regression Results:\n")
+cat("Number of samples:", nrow(X), "\n")
+cat("Number of features (genes) considered:", ncol(X), "\n")
+cat("Number of selected genes:", length(selected_genes), "\n")
+cat("Optimal lambda (minimum):", lambda_min, "\n")
+cat("Optimal lambda (1se):", lambda_1se, "\n")
+cat("\nRisk group distribution:\n")
+print(table(clinical_aligned$risk_group))
+
+# Optional: Create cross-validation plot
+pdf("lasso_cv_plot.pdf", width = 8, height = 6)
+plot(fit_cv)
+dev.off()
