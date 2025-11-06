@@ -1,0 +1,150 @@
+# R History and Session Files
+.Rhistory
+.Rapp.history
+.RData
+.Ruserdata
+
+# RStudio Files
+.Rproj.user/
+*.Rproj
+
+# R Environment Variables
+.Renviron
+
+# Temporary Files
+*~
+*.swp
+*.swo
+*#
+.#*
+
+# R Package Files
+*.tar.gz
+*.tgz
+.Rbuildignore
+
+# Output Files (comment out if you want to track these)
+# Uncomment lines below if you want to ignore output PDFs and CSVs
+# *.pdf
+# *.csv
+
+# Data Files (IMPORTANT: Keep your raw data private!)
+# Uncomment to ignore large TCGA data files
+data_mrna_seq_v2_rsem.txt
+data_clinical_patient.txt
+data_cna.txt
+*.txt
+!README.txt
+!LICENSE.txt
+
+# Large Data Directories
+data/
+raw_data/
+results/
+output/
+
+# MacOS Files
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Windows Files
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux Files
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# IDE Files
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Python (if using any Python scripts)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# Jupyter Notebooks
+.ipynb_checkpoints
+
+# LaTeX (if generating reports)
+*.aux
+*.log
+*.nav
+*.out
+*.snm
+*.toc
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+
+# Compressed Files
+*.zip
+*.rar
+*.7z
+*.tar
+
+# Logs
+*.log
+logs/
+
+# Cache Directories
+cache/
+.cache/
+
+# Backup Files
+*.bak
+*.backup
+*~
+
+# R Package Development
+src/*.o
+src/*.so
+src/*.dll
+
+# knitr and R Markdown
+*.utf8.md
+*.knit.md
+
+# Translation temp files
+po/*~
+
+# RMarkdown
+/*_cache/
+/cache/

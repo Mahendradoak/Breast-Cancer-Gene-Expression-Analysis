@@ -1,0 +1,83 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "TCGA Breast Cancer Gene Expression Analysis Pipeline"
+abstract: "A comprehensive R-based bioinformatics pipeline for analyzing differential gene expression in HER2/ERBB2-amplified breast cancer using TCGA Pan-Cancer Atlas RNA-seq data. The pipeline integrates differential expression analysis (DESeq2), pathway enrichment (clusterProfiler), and survival prediction using LASSO-regularized Cox regression."
+authors:
+  - family-names: "Your Last Name"
+    given-names: "Your First Name"
+    # orcid: "https://orcid.org/0000-0000-0000-0000"
+    # email: "your.email@institution.edu"
+    # affiliation: "Your Institution"
+repository-code: "https://github.com/yourusername/Breast-Cancer-Gene-Expression-Analysis"
+url: "https://github.com/yourusername/Breast-Cancer-Gene-Expression-Analysis"
+license: MIT
+version: 1.0.0
+date-released: 2024-11-06
+keywords:
+  - bioinformatics
+  - breast cancer
+  - gene expression
+  - differential expression
+  - TCGA
+  - RNA-seq
+  - HER2
+  - ERBB2
+  - survival analysis
+  - LASSO regression
+  - pathway analysis
+  - R programming
+  - DESeq2
+  - cancer genomics
+references:
+  - type: article
+    title: "The Cancer Genome Atlas Pan-Cancer analysis project"
+    authors:
+      - name: "Cancer Genome Atlas Research Network"
+    journal: "Nature Genetics"
+    volume: 45
+    issue: 10
+    year: 2013
+    start: 1113
+    end: 1120
+    doi: "10.1038/ng.2764"
+  - type: software
+    title: "DESeq2: Differential gene expression analysis based on the negative binomial distribution"
+    authors:
+      - family-names: "Love"
+        given-names: "Michael I."
+      - family-names: "Huber"
+        given-names: "Wolfgang"
+      - family-names: "Anders"
+        given-names: "Simon"
+    year: 2014
+    doi: "10.1186/s13059-014-0550-8"
+  - type: software
+    title: "clusterProfiler: an R package for comparing biological themes among gene clusters"
+    authors:
+      - family-names: "Yu"
+        given-names: "Guangchuang"
+      - family-names: "Wang"
+        given-names: "Li-Gen"
+      - family-names: "Han"
+        given-names: "Yanyan"
+      - family-names: "He"
+        given-names: "Qing-Yu"
+    year: 2012
+    doi: "10.1089/omi.2011.0118"
+  - type: software
+    title: "Regularization Paths for Cox's Proportional Hazards Model via Coordinate Descent"
+    authors:
+      - family-names: "Simon"
+        given-names: "Noah"
+      - family-names: "Friedman"
+        given-names: "Jerome"
+      - family-names: "Hastie"
+        given-names: "Trevor"
+      - family-names: "Tibshirani"
+        given-names: "Rob"
+    year: 2011
+    journal: "Journal of Statistical Software"
+    volume: 39
+    issue: 5
+    doi: "10.18637/jss.v039.i05"
